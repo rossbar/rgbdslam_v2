@@ -1,6 +1,10 @@
 .svn
 *.swp
 
+# Python binaries
+###################
+*.pyc
+
 # Compiled source #
 ###################
 *.com
