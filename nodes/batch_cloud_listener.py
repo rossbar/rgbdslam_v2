@@ -39,20 +39,23 @@ class BatchCloudListener(object):
   '''The BatchCloudListener instantiates a rosnode that listens on the 
      batch_clouds topic. Both optimized transforms and point clouds are
      delivered to this node.'''
-  def __init__(self):
+  def __init__(self, verbose=True):
     self.tf_listener = tf.TransformListener()
     self.subscriber = rospy.Subscriber("rgbdslam/batch_clouds", PointCloud2,\
                                        self.callback)
     self.ctr = 0
+    self.verbose = verbose
 
   def callback(self, cloud_msg):
+    tic = time.time()
     # Increment counter
     self.ctr += 1
+    if self.verbose: print 'Cloud %i received' %self.ctr
     # Get the cloud timestamp
     ts = cloud_msg.header.stamp
     # Use ts to look up optimized transform and get into RT format
-    (trans, rot) = self.tf_listener.lookupTransformFull("/camera_link", ts,\
-                                                        "/map", ts, "/map")
+    (trans, rot) = self.tf_listener.lookupTransformFull("/map", ts,\
+                        "/camera_rgb_optical_frame", ts, "/map")
     RT = convertToRT(trans, rot)
     # Get the point cloud
     cloud_arr = pointclouds.pointcloud2_to_array(cloud_msg, split_rgb=True)
