@@ -44,6 +44,9 @@ class BatchCloudListener(object):
     self.subscriber = rospy.Subscriber("rgbdslam/batch_clouds", PointCloud2,\
                                        self.callback)
     self.ctr = 0
+    # Accumulator
+    self.xyz = np.array([0, 0, 0], dtype=np.float)
+    self.rgb = np.array([0, 0, 0, 1], dtype=np.float)
 
   def callback(self, cloud_msg):
     # Increment counter
@@ -61,11 +64,14 @@ class BatchCloudListener(object):
     # Get the spatial points only and apply transformation
     xyz = np.squeeze(np.array([cloud_arr['x'], cloud_arr['y'], cloud_arr['z'],\
                                np.ones(cloud_arr.shape[-1])]))
-#    print 'RT shape = ', RT.shape
-#    print 'xyz shape = ', xyz.shape
     xyz = np.dot(RT, xyz)
-#    print 'new xyz shape = ', xyz.shape
-    # 
+    # Get colors
+    clrs = np.squeeze(np.array([cloud_arr['r']/255., cloud_arr['g']/255.,\
+                                cloud_arr['b']/255., \
+                                np.ones(cloud_arr.shape[-1])]))
+    # Concatenate data
+    self.xyz = np.concatenate((self.xyz, xyz))
+    self.rgb = np.concatenate((self.rgb, clrs))
 
     
 
