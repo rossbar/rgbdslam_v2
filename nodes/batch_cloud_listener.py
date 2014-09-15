@@ -51,6 +51,9 @@ class BatchCloudListener(object):
     # Accumulator
     self.xyz = np.array([[0, 0, 0]], dtype=np.float)
     self.rgb = np.array([[0, 0, 0, 1]], dtype=np.float)
+    # For examining the processing time versus cloud number
+    self.cld_number = []
+    self.processing_times = []
 
   def callback(self, cloud_msg):
     tic = time.time()
@@ -64,7 +67,6 @@ class BatchCloudListener(object):
       (trans, rot) = self.tf_listener.lookupTransformFull("/map", ts,\
                      "/camera_rgb_optical_frame", ts, "/map")
       RT = convertToRT(trans, rot)
-      print RT
       # Get the point cloud
       cloud_arr = pointclouds.pointcloud2_to_array(cloud_msg, split_rgb=True)
       # Throw out points where there is no depth data
@@ -82,6 +84,8 @@ class BatchCloudListener(object):
       self.rgb = np.concatenate((self.rgb, clrs))
       toc = time.time()
       if self.verbose: print '%.5f sec to process cloud %i' %((toc-tic), self.ctr)
+      self.cld_number.append(self.ctr)
+      self.processing_times.append(toc-tic)
     except tf.ExtrapolationException:
 	print 'Floating point error'
 
@@ -97,6 +101,9 @@ class BatchCloudListener(object):
     outcld['a'] = self.rgb[:,3]                                              
     np.save('/home/grim5/Desktop/mergedBatchClouds.npy', outcld)
     print 'Model saved.'                        
+    # Save processing time vs. cloud number
+    np.savez('/home/grim5/Desktop/processingTimeVsCloudNumber.npz',
+	     cld_num=self.cld_number, proc_time=self.processing_times)
 
 
 if __name__ == '__main__':
