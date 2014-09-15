@@ -23,22 +23,7 @@ def convertToRT(trans, rot):
   RT[:,-1] = trans
   return RT
 
-class BasicListener():
-  '''The BasicListener instantiates a rosnode that listens on the 
-     batch_clouds topic. The node print out every time a new cloud_msg is
-     received.'''
-  def __init__(self):
-    self.tf_listener = tf.TransformListener()
-    self.subscriber = rospy.Subscriber("rgbdslam/batch_clouds", PointCloud2,\
-                                       self.callback)
-    self.ctr = 0
-
-  def callback(self, cloud_msg):
-    '''Print out that a cloud message was received.'''
-    self.ctr += 1
-    print "Cloud #%s received!" %(self.ctr)
-
-class BatchCloudListener(object):
+class BatchCloudBuffer(object):
   '''The BatchCloudListener instantiates a rosnode that listens on the 
      batch_clouds topic. Both optimized transforms and point clouds are
      delivered to this node.'''
@@ -49,11 +34,8 @@ class BatchCloudListener(object):
     self.ctr = 0
     self.verbose = verbose
     # Accumulator
-    self.xyz = np.array([[0, 0, 0]], dtype=np.float)
-    self.rgb = np.array([[0, 0, 0, 1]], dtype=np.float)
-    # For examining the processing time versus cloud number
-    self.cld_number = []
-    self.processing_times = []
+    self.buffer_size = 10
+    self.resetBuffer()
 
   def callback(self, cloud_msg):
     tic = time.time()
@@ -84,10 +66,20 @@ class BatchCloudListener(object):
       self.rgb = np.concatenate((self.rgb, clrs))
       toc = time.time()
       if self.verbose: print '%.5f sec to process cloud %i' %((toc-tic), self.ctr)
-      self.cld_number.append(self.ctr)
-      self.processing_times.append(toc-tic)
     except tf.ExtrapolationException:
 	print 'Floating point error'
+    # If buffered data to be sent, send it
+    if self.ctr % self.buffer_size == 0:
+      # TODO: PUBLISH DATA HERE
+      print
+      print 'PUBLISH DATA FROM BUFFER NOW'
+      print
+      # self.resetBuffer()
+
+  def resetBuffer(self):
+    '''Reset the 3D point and color buffers'''
+    self.xyz = np.array([[0, 0, 0]], dtype=np.float)
+    self.rgb = np.array([[0, 0, 0, 1]], dtype=np.float)
 
   def saveModel(self, blerg):                                                 
     print 'Saving model...'                                                     
@@ -101,13 +93,9 @@ class BatchCloudListener(object):
     outcld['a'] = self.rgb[:,3]                                              
     np.save('/home/grim5/Desktop/mergedBatchClouds.npy', outcld)
     print 'Model saved.'                        
-    # Save processing time vs. cloud number
-    np.savez('/home/grim5/Desktop/processingTimeVsCloudNumber.npz',
-	     cld_num=self.cld_number, proc_time=self.processing_times)
-
 
 if __name__ == '__main__':
   rospy.init_node('batch_cloud_listener', anonymous=True)
-  listener = BatchCloudListener()
+  listener = BatchCloudBuffer()
   rospy.spin()
   rospy.on_shutdown(listener.saveModel)
