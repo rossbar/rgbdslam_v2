@@ -61,11 +61,7 @@ class BatchCloudListener(object):
     # Get the spatial points only and apply transformation
     xyz = np.squeeze(np.array([cloud_arr['x'], cloud_arr['y'], cloud_arr['z'],\
                                np.ones(cloud_arr.shape[-1])]))
-#    print 'RT shape = ', RT.shape
-#    print 'xyz shape = ', xyz.shape
     xyz = np.dot(RT, xyz)
-#    print 'new xyz shape = ', xyz.shape
-    # 
 
     
 
