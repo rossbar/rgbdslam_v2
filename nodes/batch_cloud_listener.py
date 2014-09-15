@@ -54,8 +54,8 @@ class BatchCloudListener(object):
     # Get the cloud timestamp
     ts = cloud_msg.header.stamp
     # Use ts to look up optimized transform and get into RT format
-    (trans, rot) = self.tf_listener.lookupTransformFull("/camera_link", ts,\
-                                                        "/map", ts, "/map")
+    (trans, rot) = self.tf_listener.lookupTransformFull("/map", ts,\
+                        "/camera_rgb_optical_frame", ts, "/map")
     RT = convertToRT(trans, rot)
     # Get the point cloud
     cloud_arr = pointclouds.pointcloud2_to_array(cloud_msg, split_rgb=True)
