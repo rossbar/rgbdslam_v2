@@ -70,11 +70,15 @@ class BatchCloudBuffer(object):
 	print 'Floating point error'
     # If buffered data to be sent, send it
     if self.ctr % self.buffer_size == 0:
-      # TODO: PUBLISH DATA HERE
-      print
-      print 'PUBLISH DATA FROM BUFFER NOW'
-      print
-      # self.resetBuffer()
+      self.sendBufferedClouds()
+
+  def sendBufferedClouds(self):
+    # TODO: PUBLISH DATA HERE
+    print
+    print 'PUBLISH DATA FROM BUFFER NOW'
+    print
+    # self.resetBuffer()
+
 
   def resetBuffer(self):
     '''Reset the 3D point and color buffers'''
