@@ -11,9 +11,13 @@ from python_msg_conversions import pointclouds
 
 import tf
 
-cldType = np.dtype({ 'names':['x', 'y', 'z', 'r', 'g', 'b', 'a'],\
+# Dtypes
+glCldType = np.dtype({ 'names':['x', 'y', 'z', 'r', 'g', 'b', 'a'],\
                      'formats':[np.float32, np.float32, np.float32, np.float32,\
                                np.float32, np.float32, np.float32]})     
+rosCldType = np.dtype({ 'names':['x', 'y', 'z', 'r', 'g', 'b'],\
+                     'formats':[np.float32, np.float32, np.float32, np.uint8,\
+                               np.uint8, np.uint8]})     
 
 def convertToRT(trans, rot):
   '''Convert the translation vector and quaternion rotation that come from
@@ -31,6 +35,8 @@ class BatchCloudBuffer(object):
     self.tf_listener = tf.TransformListener()
     self.subscriber = rospy.Subscriber("rgbdslam/batch_clouds", PointCloud2,\
                                        self.callback)
+    self.cloud_publisher = rospy.Publisher("buffered_clouds", PointCloud2)#,\
+#		                           queue_size=10)
     self.ctr = 0
     self.verbose = verbose
     # Accumulator
@@ -58,9 +64,7 @@ class BatchCloudBuffer(object):
                                  np.ones(cloud_arr.shape[-1])]))
       xyz = RT.dot(xyz).T
       # Get colors
-      clrs = np.squeeze(np.array([cloud_arr['r']/255., cloud_arr['g']/255.,\
-                                  cloud_arr['b']/255., \
-                                  np.ones(cloud_arr.shape[-1])])).T
+      clrs = np.squeeze(np.array([cloud_arr['r'], cloud_arr['g'], cloud_arr['b']])).T
       # Concatenate data
       self.xyz = np.concatenate((self.xyz, xyz))
       self.rgb = np.concatenate((self.rgb, clrs))
@@ -73,30 +77,53 @@ class BatchCloudBuffer(object):
       self.sendBufferedClouds()
 
   def sendBufferedClouds(self):
-    # TODO: PUBLISH DATA HERE
-    print
-    print 'PUBLISH DATA FROM BUFFER NOW'
-    print
-    # self.resetBuffer()
-
+    # Convert cloud to proper format
+    tic = time.time()
+    cloud = self.convertToCloudArray(rosCldType)
+    cloud = cloud.view(np.recarray)
+    cloud_msg = pointclouds.array_to_pointcloud2(cloud)
+    # Send cloud
+    self.cloud_publisher.publish(cloud_msg)
+    toc = time.time()
+    # Reset cloud buffer
+    self.resetBuffer()
+    if self.verbose:
+      print
+      print 'Buffered clouds sent! %.5f sec to send clouds.' %(toc-tic)
+      print
 
   def resetBuffer(self):
     '''Reset the 3D point and color buffers'''
-    self.xyz = np.array([[0, 0, 0]], dtype=np.float)
-    self.rgb = np.array([[0, 0, 0, 1]], dtype=np.float)
+    self.xyz = np.array([[0, 0, 0]], dtype=np.float32)
+    self.rgb = np.array([[0, 0, 0]], dtype=np.uint8)
+
+  def convertToCloudArray(self, cldType):
+    '''Convert cloud from internal processing format to format used for 
+       other sending/saving tasks'''
+    # Set the cloud type (gl or ros)
+    outcld = np.zeros(self.xyz.shape[0], dtype=cldType)
+    # xyz points are the same for both formats
+    outcld['x'] = self.xyz[:,0]
+    outcld['y'] = self.xyz[:,1]
+    outcld['z'] = self.xyz[:,2]
+    # For saving/plotting with opengl
+    if cldType is glCldType:
+      outcld['r'] = self.rgb[:,0]/255.
+      outcld['g'] = self.rgb[:,1]/255.
+      outcld['b'] = self.rgb[:,2]/255.
+      outcld['a'] = np.ones(len(self.rgb))
+    # For converting back into PointCloud2
+    if cldType is rosCldType:
+      outcld['r'] = self.rgb[:,0]
+      outcld['g'] = self.rgb[:,1]
+      outcld['b'] = self.rgb[:,2]
+    return outcld
 
   def saveModel(self, blerg):                                                 
-    print 'Saving model...'                                                     
-    outcld = np.zeros(self.xyz.shape[0], dtype=cldType )                    
-    outcld['x'] = self.xyz[:,0]                                              
-    outcld['y'] = self.xyz[:,1]                                              
-    outcld['z'] = self.xyz[:,2]                                              
-    outcld['r'] = self.rgb[:,0]                                              
-    outcld['g'] = self.rgb[:,1]                                              
-    outcld['b'] = self.rgb[:,2]                                              
-    outcld['a'] = self.rgb[:,3]                                              
+    print 'Saving model...'
+    outcld = self.convertToCloudArray(glCldType)
     np.save('/home/grim5/Desktop/mergedBatchClouds.npy', outcld)
-    print 'Model saved.'                        
+    print 'Model saved.'
 
 if __name__ == '__main__':
   rospy.init_node('batch_cloud_listener', anonymous=True)
