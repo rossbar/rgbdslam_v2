@@ -7,6 +7,7 @@ import time
 import rospy
 
 from sensor_msgs.msg import PointCloud2
+from geometry_msgs.msg import TransformStamped
 from python_msg_conversions import pointclouds
 
 import tf
@@ -27,6 +28,15 @@ def convertToRT(trans, rot):
   RT[:,-1] = trans
   return RT
 
+def convertToStampedTransform(ts, trans, rot):
+  '''Convert a timestamp, translation vector (3x1) and rotation quaternion
+     (4x1) into a ros TransformStamped message'''
+  transform_msg = TransformStamped()
+  transform_msg.header.stamp = ts
+  transform_msg.transform.translation = trans
+  transform_msg.transform.rotation = rot
+  return transform_msg
+
 class BatchCloudBuffer(object):
   '''The BatchCloudListener instantiates a rosnode that listens on the 
      batch_clouds topic. Both optimized transforms and point clouds are
@@ -37,6 +47,8 @@ class BatchCloudBuffer(object):
                                        self.callback)
     self.cloud_publisher = rospy.Publisher("buffered_clouds", PointCloud2)#,\
 #		                           queue_size=10)
+    self.transform_publihser = rospy.Publisher("unbuffered_poses",\
+		               TransformStamped)
     self.ctr = 0
     self.verbose = verbose
     # Accumulator
@@ -70,6 +82,12 @@ class BatchCloudBuffer(object):
       self.rgb = np.concatenate((self.rgb, clrs))
       toc = time.time()
       if self.verbose: print '%.5f sec to process cloud %i' %((toc-tic), self.ctr)
+      # Publish transform (unbuffered)
+      tic = time.time()
+      tfmsg = convertToStampedTransform(ts, trans, rot)
+      self.transform_publihser.publish(tfmsg)
+      toc = time.time()
+      print "%.5f sec to publish transform" %(toc-tic)
     except tf.ExtrapolationException:
 	print 'Floating point error'
     # If buffered data to be sent, send it
