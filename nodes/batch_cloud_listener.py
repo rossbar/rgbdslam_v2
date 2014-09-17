@@ -3,7 +3,6 @@ import numpy as np
 import os
 import time
 
-#import roslib; roslib.load_manifest('rgbdslam')
 import rospy
 
 from sensor_msgs.msg import PointCloud2
@@ -12,30 +11,8 @@ from python_msg_conversions import pointclouds
 
 import tf
 
-# Dtypes
-glCldType = np.dtype({ 'names':['x', 'y', 'z', 'r', 'g', 'b', 'a'],\
-                     'formats':[np.float32, np.float32, np.float32, np.float32,\
-                               np.float32, np.float32, np.float32]})     
-rosCldType = np.dtype({ 'names':['x', 'y', 'z', 'r', 'g', 'b'],\
-                     'formats':[np.float32, np.float32, np.float32, np.uint8,\
-                               np.uint8, np.uint8]})     
-
-def convertToRT(trans, rot):
-  '''Convert the translation vector and quaternion rotation that come from
-     tf by default to a 3x4 RT matrix'''
-  RT = np.zeros((3,4))
-  RT[0:3, 0:3] = tf.transformations.quaternion_matrix(rot)[0:3, 0:3]
-  RT[:,-1] = trans
-  return RT
-
-def convertToStampedTransform(ts, trans, rot):
-  '''Convert a timestamp, translation vector (3x1) and rotation quaternion
-     (4x1) into a ros TransformStamped message'''
-  transform_msg = TransformStamped()
-  transform_msg.header.stamp = ts
-  transform_msg.transform.translation = trans
-  transform_msg.transform.rotation = rot
-  return transform_msg
+from dtype_defines import glCldType, rosCldType
+from converter_functions import convertToRT, convertToStampedTransform
 
 class BatchCloudBuffer(object):
   '''The BatchCloudListener instantiates a rosnode that listens on the 
