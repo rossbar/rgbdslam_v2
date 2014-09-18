@@ -30,6 +30,8 @@ class SISAcquisitionAndAnalysisNode(object):
     self.data_out = None
     self.rate = rospy.rate(read_rate)	# Hz, default is every 2 seconds
     self.iary = np.zeros(1, dtype=interactionType) # For CAnalysis
+    # rostopic stuff
+    self.publisher = rospy.Publisher("compton_events", ComptonEvents)
     # SIS flags - NOTE: HARD-CODED FOR NOW, SHOULD MAKE CONFIGURABLE
     self.save_data = 0	# Default: Don't save binary data
     self.cal_file = PF_DIR + 'src/SIS/CCI2_Calibration_4-9-13.txt'
