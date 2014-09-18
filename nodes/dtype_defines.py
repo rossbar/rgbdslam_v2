@@ -1,5 +1,11 @@
 import numpy as np
 
+# For event data from SIS
+edataType = np.dtype({'names':['timestamp', 'ADC_value', 'detector', 'trigger',\
+                               'pileup', 'retrigger', 'rid'],\
+                      'formats':['<u8', '<f4', '<u2', '<u2', '<u2', '<u2',\
+                                 '<u4']})
+
 # Timestamped transform that stores the rotation and translation info in a
 # 3x4 RT matrix
 stamped_transform_type = np.dtype([('timestamp', 'u8'),('RT', '(3,4)f4')])
