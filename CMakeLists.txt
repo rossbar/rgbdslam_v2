@@ -48,7 +48,9 @@ project(rgbdslam)
 #add_definitions(-DROSCONSOLE_SEVERITY_INFO)
 
 add_service_files(DIRECTORY srv FILES rgbdslam_ros_ui.srv rgbdslam_ros_ui_b.srv rgbdslam_ros_ui_f.srv rgbdslam_ros_ui_s.srv) 
-generate_messages()
+add_message_files(FILES GammaRayInteraction.msg ComptonEvent.msg ComptonEventList.msg)
+generate_messages(DEPENDENCIES std_msgs)
+#generate_messages()
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES my_pcl_tutorial
