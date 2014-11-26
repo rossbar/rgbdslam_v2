@@ -1,10 +1,14 @@
 import numpy as np
 
-# For event data from SIS
+# Gamma-ray data
 edataType = np.dtype({'names':['timestamp', 'ADC_value', 'detector', 'trigger',\
                                'pileup', 'retrigger', 'rid'],\
                       'formats':['<u8', '<f4', '<u2', '<u2', '<u2', '<u2',\
                                  '<u4']})
+interactionType = np.dtype({'names':['energy','x','y','z','dT','dE','det'],\
+		            'formats':[np.float32, np.float32, np.float32,\
+			               np.float32, np.float32, np.float32,\
+				       np.uint8]}, align=True)
 
 # Timestamped transform that stores the rotation and translation info in a
 # 3x4 RT matrix
