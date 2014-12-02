@@ -4,6 +4,7 @@ import numpy as np
 import os
 import time
 
+### ROS imports
 import rospy
 
 # Messages
@@ -19,6 +20,11 @@ import tf
 from dtype_defines import stamped_transform_type, xyz_cloud_type, edataType
 from converter_functions import convertToRT, convertQuaternionToTuple,\
                                 convertTranslationToTuple
+### /ROS imports
+
+### Volumetric imports
+import comptonMLEM3D
+from positionInteractionsByTiming import positionInteractionsByTiming
 
 TRANSFORM_BUFFER_SIZE = 10000
 
@@ -29,6 +35,9 @@ class VolumetricImagingNode(object):
      3D radiation image using Andy's MLEM algorithm. Publish result on a new
      topic that will link back up to the GUI.'''
   def __init__(self, verbose=True):
+    # Imagine parameters
+    self.use_sdf = True	# Use cloud to restrict image space
+    self.n_iters = 10	# Number of EM iterations
     # Keep track of number of data received
     self.pose_counter = 0
     self.cloud_counter = 0
@@ -38,6 +47,8 @@ class VolumetricImagingNode(object):
     self.cloud = np.empty(0, dtype=xyz_cloud_type)
     self.transforms = np.zeros(TRANSFORM_BUFFER_SIZE,\
 		               dtype=stamped_transform_type)
+    self.events = np.empty((0, 2), dtype=interactionType)
+    self.event_stamps = np.empty(0, dtype=np.float)
     # Set up listeners
     self.pose_listener = rospy.Subscriber("unbuffered_poses", TransformStamped,\
 		                          self.transform_callback)
@@ -69,4 +80,22 @@ class VolumetricImagingNode(object):
   def compton_callback(self, event_list):
     '''Append new Compton data from the detector'''
     ts, l22 = ce2np(event_list)
+    ts = np.array(ts, ndmin=1)
+    self.event_stamps = np.concatenate((self.event_stamps, ts), axis=1)
+    self.events = np.concatenate((self.events, l22))
 
+  ### Imaging
+  def update_radiation_image(self):
+    '''Take the cloud, pose, and event buffers stored in self and using the
+       3D MLEM algorithm to compute a radiation image.'''
+    # Convert interactions to 3D interactions
+    # NOTE: This will take some kajiggering to get the data in the right formats
+    interactions_3D = positionInteractionsByTiming(self.events,\
+		      self.transforms, makePlots=False, E=662.)
+    cIm = comptonMLEM3D.comptonMLEM3D(dataSource=interactions_3D, sigTheta=3.,\
+		                      pixSize=0.1, rangeMult=1)
+    if self.use_sdf:
+      mask_array = cIm.setGridFromCld(self.cloud, 0.1)
+    # Compute
+    cIm.computMLEMsphere(self.n_iters, showPlots=False, verbose=False,\
+		         nSph=10000, plotSphere=False, maskArray=maskArray)
