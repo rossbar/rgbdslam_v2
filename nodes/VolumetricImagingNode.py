@@ -36,8 +36,10 @@ class VolumetricImagingNode(object):
      topic that will link back up to the GUI.'''
   def __init__(self, verbose=True):
     # Imagine parameters
+    self.energy = 662.
     self.use_sdf = True	# Use cloud to restrict image space
     self.n_iters = 10	# Number of EM iterations
+    self.sequence_events = True	# Toggle whether to use event sequencing
     # Keep track of number of data received
     self.pose_counter = 0
     self.cloud_counter = 0
@@ -80,6 +82,9 @@ class VolumetricImagingNode(object):
   def compton_callback(self, event_list):
     '''Append new Compton data from the detector'''
     ts, l22 = ce2np(event_list)
+    # Event sequencing #TODO!!!!
+    if self.sequence_events:
+      pass
     ts = np.array(ts, ndmin=1)
     self.event_stamps = np.concatenate((self.event_stamps, ts), axis=1)
     self.events = np.concatenate((self.events, l22))
