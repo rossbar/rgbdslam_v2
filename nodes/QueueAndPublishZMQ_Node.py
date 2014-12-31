@@ -56,31 +56,32 @@ class CloudAndPoseBuffer_ZMQPublisher(object):
     try:
       (trans, rot) = self.tf_listener.lookupTransformFull("/map", ts,\
                      "/camera_rgb_optical_frame", ts, "/map")
-      R = rot[0:3, 0:3]
+      R = tf.transformations.quaternion_matrix(rot)
+      R = R[0:3, 0:3]
+      # Add pose to buffer
+      ts_nsec = ts.nsecs
+      new_pose = np.array([(ts_nsec,) + trans + tuple(R.flatten())],\
+                          dtype=ttRType)
+      self.poses = np.concatenate((self.poses, new_pose))
+      # Convert pose to RT matrix for application to point cloud
+      RT = convertToRT(trans, rot)
+      # Get point cloud
+      cloud_arr = pointclouds.pointcloud2_to_array(cloud_msg, split_rgb=True)
+      cloud_arr = cloud_arr[np.isfinite(cloud_arr['z'])]
+      xyz = np.squeeze(np.array([cloud_arr['x'], cloud_arr['y'], cloud_arr['z'],\
+                                 np.ones(cloud_arr.shape[-1])]))
+      # Apply pose to pc
+      xyz = RT.dot(xyz).T
+      cloud_arr['x'] = xyz[:,0]
+      cloud_arr['y'] = xyz[:,1]
+      cloud_arr['z'] = xyz[:,2]
+      # Add new pc data to cloud buffer
+      np.concatenate((self.point_cloud, cloud_arr))
+      toc = time.time()
+      print 'Cloud %s handled: %.5f sec to parse and buffer cloud.'\
+            %(self.ctr, (toc-tic))
     except tf.ExtrapolationException:
       print 'WARNING: FLOATING POINT ERROR IN tf.lookupTransformFull'
-    # Add pose to buffer
-    ts_nsec = ts.nsecs
-    new_pose = np.array([(ts_nsec,) + trans + tuple(R.flatten())],\
-                        dtype=ttRType)
-    self.poses = np.concatenate((self.poses, new_pose))
-    # Convert pose to RT matrix for application to point cloud
-    RT = convertToRT(trans, rot)
-    # Get point cloud
-    cloud_arr = pointclouds.pointcloud2_to_array(cloud_msg, split_rgb=True)
-    cloud_arr = cloud_arr[np.isfinite(cloud_arr['z'])]
-    xyz = np.squeeze(np.array([cloud_arr['x'], cloud_arr['y'], cloud_arr['z'],\
-                               np.ones(cloud_arr.shape[-1])]))
-    # Apply pose to pc
-    xyz = RT.dot(xyz).T
-    cloud_arr['x'] = xyz[:,0]
-    cloud_arr['y'] = xyz[:,1]
-    cloud_arr['z'] = xyz[:,2]
-    # Add new pc data to cloud buffer
-    np.concatenate((self.point_cloud, cloud_arr))
-    toc = time.time()
-    print 'Cloud %s handled: %.5f sec to parse and buffer cloud.'\
-          %(self.ctr, (toc-tic))
     
     # If publication criterion met, send data out viz zmq
     if self.ctr % self.num_to_send == 0:
