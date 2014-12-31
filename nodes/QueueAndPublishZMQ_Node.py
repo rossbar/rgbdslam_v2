@@ -21,6 +21,8 @@ ttRType = np.dtype( {"names":['timestamp', 'tx', 'ty', 'tz', 'ROO', 'R01',\
                                 np.float32,np.float32,np.float32,np.float32,\
                                 np.float32]} )
 
+from ZmqClass import ZmqEmitter
+
 class CloudAndPoseBuffer_ZMQPublisher(object):
   '''Create a buffer for poses and point clouds (individual frames). Publish 
      the results on zmq topics at user-defined intervals (queue size or time)'''
