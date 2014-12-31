@@ -26,17 +26,23 @@ from ZmqClass import ZmqEmitter
 class CloudAndPoseBuffer_ZMQPublisher(object):
   '''Create a buffer for poses and point clouds (individual frames). Publish 
      the results on zmq topics at user-defined intervals (queue size or time)'''
-  def __init__(self):
+  def __init__(self, tf_port="5557", pc_port="5558", tf_topic="poses",\
+	       pc_topic="pointCloud"):
     # Create objects to listen on ros topics
     self.tf_listener = tf.TransformListener()
     self.pc_listener = rospy.Subscriber("rgbdslam/batch_clouds", PointCloud2,\
                                         self.new_pc_callback)
     # Buffers for cloud data and pose data
-    self.xyz = np.array([[0, 0, 0]], dtype=np.float32)
-    self.rgb = np.array([[0, 0, 0]], dtype=np.uint8)
+    self.point_cloud = np.empty(0, dtype=rosCldType)
     self.poses = np.empty(0, dtype=ttRType)
+    # ZMQ Publishers
+    self.tf_emitter = ZmqEmitter(tf_port, tf_topic)
+    self.pc_emitter = ZmqEmitter(pc_port, pc_topic)
+
     # Count how many poses and point clouds have been received
     self.ctr = 0
+    # Publication interval
+    self.num_to_send = 10
   
   def new_pc_callback(self, cloud_msg):
     '''When a new point cloud is received over the batch_clouds topic, 
@@ -66,11 +72,18 @@ class CloudAndPoseBuffer_ZMQPublisher(object):
     cloud_arr = cloud_arr[np.isfinite(cloud_arr['z'])]
     xyz = np.squeeze(np.array([cloud_arr['x'], cloud_arr['y'], cloud_arr['z'],\
                                np.ones(cloud_arr.shape[-1])]))
-    rgb = np.squeeze(np.array([cloud_arr['r'], cloud_arr['g'],\
-                               cloud_arr['b']])).T
     # Apply pose to pc
     xyz = RT.dot(xyz).T
+    cloud_arr['x'] = xyz[:,0]
+    cloud_arr['y'] = xyz[:,1]
+    cloud_arr['z'] = xyz[:,2]
     # Add new pc data to cloud buffer
-    self.xyz = np.concatenate((self.xyz, xyz))
-    self.rgb = np.concatenate((self.rgb, rgb))
+    np.concatenate((self.point_cloud, cloud_arr))
     toc = time.time()
+    
+    # If publication criterion met, send data out viz zmq
+    if self.ctr % self.num_to_send == 0:
+      self.tf_emitter.send_zipped_pickle(self.poses)
+      self.pc_emitter.send_zipped_pickle(self.point_cloud)
+      # Reset pc buffer
+      self.point_cloud = np.empty(0, dtype=rosCldType)
