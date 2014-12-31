@@ -38,7 +38,6 @@ class CloudAndPoseBuffer_ZMQPublisher(object):
     # ZMQ Publishers
     self.tf_emitter = ZmqEmitter(tf_port, tf_topic)
     self.pc_emitter = ZmqEmitter(pc_port, pc_topic)
-
     # Count how many poses and point clouds have been received
     self.ctr = 0
     # Publication interval
@@ -56,7 +55,7 @@ class CloudAndPoseBuffer_ZMQPublisher(object):
     # extrapolation errors and notify user
     try:
       (trans, rot) = self.tf_listener.lookupTransformFull("/map", ts,\
-                     "/camera_rgb_optical_fram", ts, "/map")
+                     "/camera_rgb_optical_frame", ts, "/map")
       R = rot[0:3, 0:3]
     except tf.ExtrapolationException:
       print 'WARNING: FLOATING POINT ERROR IN tf.lookupTransformFull'
@@ -80,10 +79,25 @@ class CloudAndPoseBuffer_ZMQPublisher(object):
     # Add new pc data to cloud buffer
     np.concatenate((self.point_cloud, cloud_arr))
     toc = time.time()
+    print 'Cloud %s handled: %.5f sec to parse and buffer cloud.'\
+          %(self.ctr, (toc-tic))
     
     # If publication criterion met, send data out viz zmq
     if self.ctr % self.num_to_send == 0:
+      print 'Sending poses...'
+      tic = time.time()
       self.tf_emitter.send_zipped_pickle(self.poses)
+      toc = time.time()
+      print 'Poses Sent! %.5f sec to send poses.' %(toc-tic)
+      print 'Sending point cloud...'
+      tic = time.time()
       self.pc_emitter.send_zipped_pickle(self.point_cloud)
+      toc = time.time()
+      print 'Cloud Sent! %.5f sec to send point cloud.' %(toc-tic)
       # Reset pc buffer
       self.point_cloud = np.empty(0, dtype=rosCldType)
+
+if __name__ == '__main__':
+  rospy.init_node('ZMQPublisher', anonymous=True)
+  listener = CloudAndPoseBuffer_ZMQPublisher()
+  rospy.spin()
