@@ -59,8 +59,8 @@ class CloudAndPoseBuffer_ZMQPublisher(object):
       R = tf.transformations.quaternion_matrix(rot)
       R = R[0:3, 0:3]
       # Add pose to buffer
-      ts_nsec = ts.nsecs
-      new_pose = np.array([(ts_nsec,) + trans + tuple(R.flatten())],\
+      ts = ts.secs + ts.nsecs*1e-9
+      new_pose = np.array([(ts,) + trans + tuple(R.flatten())],\
                           dtype=ttRType)
       self.poses = np.concatenate((self.poses, new_pose))
       # Convert pose to RT matrix for application to point cloud
