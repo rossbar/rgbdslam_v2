@@ -76,7 +76,7 @@ class CloudAndPoseBuffer_ZMQPublisher(object):
       cloud_arr['y'] = xyz[:,1]
       cloud_arr['z'] = xyz[:,2]
       # Add new pc data to cloud buffer
-      np.concatenate((self.point_cloud, cloud_arr))
+      self.point_cloud = np.concatenate((self.point_cloud, cloud_arr))
       toc = time.time()
       print 'Cloud %s handled: %.5f sec to parse and buffer cloud.'\
             %(self.ctr, (toc-tic))

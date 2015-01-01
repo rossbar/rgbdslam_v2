@@ -8,8 +8,6 @@ import tables
 import rospy
 
 from dtype_defines import edataType
-from rgbdslam.msg import ComptonEventList
-from python_msg_conversions.gammarays import numpy_to_ComptonEventList as n2cel
 
 # Set up python environment for using PythonFramework tools
 PF_DIR = os.path.expanduser("~") + "/PythonFramework/"
@@ -29,6 +27,8 @@ savedInteractionType = np.dtype({"names":['time','energy1', 'x1', 'y1', 'z1', 'd
                                             np.float32, np.float32, np.float32,\
                                             np.float32, np.float32, np.float32,\
                                             np.float32, np.float32, np.float32]} )
+
+from ZmqClass import ZmqEmitter
 
 class SISAcquisitionAndAnalysisNode(object):
   '''The SISAcquisitionAndAnalysisNode will insantiate a node that is 
@@ -158,9 +158,8 @@ class SISAcquisitionAndAnalysisNode(object):
       newEvs[i]['det2'] = int2[6]
     # Append new interactions to the existing ones
     self.data_out = np.concatenate((self.data_out, newEvs)) 
-    self.send_ctr += 1 
     # Send all interactions                                                     
-    self.emitter.send_zipped_pickle(self.data_out)
+    self.publisher.send_zipped_pickle(self.data_out)
 
 if __name__ == '__main__':
   rospy.init_node('detector_publisher', anonymous=True)
