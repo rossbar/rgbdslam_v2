@@ -18,7 +18,8 @@ set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 #SET(CMAKE_CXX_FLAGS "-O3 -fPIC -std=c++0x")
 #For annotated profiling with perf: 
-SET(CMAKE_CXX_FLAGS "-ggdb -O3 -fPIC -std=c++0x")
+#SET(CMAKE_CXX_FLAGS "-ggdb -O3 -fPIC -std=c++0x")
+SET(CMAKE_CXX_FLAGS "-ggdb -O3 -fPIC -std=c++0x -march=native -mno-avx")
 
 IF (${USE_GL2PS})
   add_definitions(-DGL2PS)
