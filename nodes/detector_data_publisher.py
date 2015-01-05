@@ -33,7 +33,7 @@ from ZmqClass import ZmqEmitter
 class SISAcquisitionAndAnalysisNode(object):
   '''The SISAcquisitionAndAnalysisNode will insantiate a node that is 
      responsible for acquiring data from a SIS system, '''
-  def __init__(self, verbose=True, read_rate=0.5):
+  def __init__(self, verbose=True, read_rate=1):
     # Node attributes
     self.ctr = 0
     self.msg = None
@@ -56,8 +56,6 @@ class SISAcquisitionAndAnalysisNode(object):
 
   def run(self):
     while not rospy.is_shutdown():
-      # Wait for next dump
-      self.rate.sleep()
       # NOTE: Want this to be controlled via input - hard-coded for testing
       if not self.hardware_started:
 	self.start_hardware()
@@ -70,6 +68,8 @@ class SISAcquisitionAndAnalysisNode(object):
       # Publish
       if len(self.data_out) > 0:
         self.publisher.send_zipped_pickle(self.data_out)
+      # Wait for next dump
+      self.rate.sleep()
 
   def task(self):
     if self.hardware_started:
@@ -87,7 +87,8 @@ class SISAcquisitionAndAnalysisNode(object):
     # Acquire data from sis
     tic = time.time()
     ts, en, ch, trig = sis.acquiredata(self.cal_file, self.save_data)
-    acq_ts = time.time()	# Acquisition time stamp
+#    acq_ts = time.time()	# Acquisition time stamp
+    acq_ts = rospy.get_time()
     # Convert to numpy array
     edata = np.zeros(ts.shape, dtype=edataType)
     edata = edata.view(np.recarray)
@@ -161,9 +162,14 @@ class SISAcquisitionAndAnalysisNode(object):
     # Send all interactions                                                     
     self.publisher.send_zipped_pickle(self.data_out)
 
+  def save_interactions(self):
+    hdr = '#time\te1\tx1\ty1\tz1\tdT1\tdE1\tdet1\te2\tx2\ty2\tz2\tdT2\tdE2\tdet2\n'
+    np.savetxt('/home/grim5/Desktop/ints22.txt', self.data_out, header=hdr)
+
 if __name__ == '__main__':
   rospy.init_node('detector_publisher', anonymous=True)
   detector_publisher = SISAcquisitionAndAnalysisNode()
   raw_input('Press Enter to begin detector acquisition: ')
   print 'Starting detector acquisition...'
   detector_publisher.run()
+  detector_publisher.save_interactions()

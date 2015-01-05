@@ -98,7 +98,12 @@ class CloudAndPoseBuffer_ZMQPublisher(object):
       # Reset pc buffer
       self.point_cloud = np.empty(0, dtype=rosCldType)
 
+  def save_poses(self, msg):
+    hdr = '#timestamp	tx	ty	tz	R00	R01	R02	R10	R11	R12	R20	R21	R22\n'
+    np.savetxt('/home/grim5/Desktop/poses.txt', self.poses, header=hdr)
+
 if __name__ == '__main__':
   rospy.init_node('ZMQPublisher', anonymous=True)
   listener = CloudAndPoseBuffer_ZMQPublisher()
   rospy.spin()
+  rospy.on_shutdown(listener.save_poses)
