@@ -15,7 +15,7 @@ class ZmqEmitter():
     """pack and compress an object with pickle and zlib."""
     pobj = pickle.dumps(obj, protocol)
     zobj = zlib.compress(pobj)
-#    print 'zipped pickle is %i bytes'%len(zobj)
+    print 'zipped pickle is %i bytes'%len(zobj)
     return self.socket.send_multipart((self.topic, zobj), flags=flags)
 
 

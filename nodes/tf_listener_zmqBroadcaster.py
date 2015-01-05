@@ -45,11 +45,16 @@ if __name__ == '__main__':
         # Format data properly for broadcasting
         newPose = np.array( [(ts,)+trans+tuple(R.flatten())],\
                             dtype=ttRType )
-        RTdata = np.concatenate( (RTdata, newPose) )
-        # Emit the data, but only once a second
-        if ctr % 10 == 0:
-          emitter.send_zipped_pickle(RTdata)
-        ctr += 1
+	# Make sure pose is new
+	if len(RTdata) < 1:
+	    RTdata = np.concatenate((RTdata, newPose))
+	    continue
+	if not np.array_equal(newPose, RTdata[-1]):
+            RTdata = np.concatenate( (RTdata, newPose) )
+            # Emit the data, but only once a second
+            if ctr % 10 == 0:
+              emitter.send_zipped_pickle(RTdata)
+            ctr += 1
         
         # Write to .ros/log std-log
         outstr += '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' %(ts,trans[0],trans[1],trans[2],rot[0][0],rot[0][1],rot[0][2],rot[1][0],rot[1][1],rot[1][2],rot[2][0],rot[2][1],rot[2][2])
