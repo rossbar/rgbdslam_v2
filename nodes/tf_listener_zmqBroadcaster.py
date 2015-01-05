@@ -22,8 +22,7 @@ if __name__ == '__main__':
     # Init rospy node
     rospy.init_node('tf_listener')
     listener = tf.TransformListener()
-    emitter = ZmqEmitter("5557")
-    topic = 'poses'
+    emitter = ZmqEmitter("5557", 'poses')
     RTdata = np.empty(0, dtype=ttRType)
     ctr = 0
     rate = rospy.Rate(10.0)
@@ -49,7 +48,7 @@ if __name__ == '__main__':
         RTdata = np.concatenate( (RTdata, newPose) )
         # Emit the data, but only once a second
         if ctr % 10 == 0:
-          emitter.send_zipped_pickle( RTdata, topic )
+          emitter.send_zipped_pickle(RTdata)
         ctr += 1
         
         # Write to .ros/log std-log

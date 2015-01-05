@@ -34,9 +34,9 @@ class CloudAndPoseBuffer_ZMQPublisher(object):
                                         self.new_pc_callback)
     # Buffers for cloud data and pose data
     self.point_cloud = np.empty(0, dtype=rosCldType)
-    self.poses = np.empty(0, dtype=ttRType)
+#    self.poses = np.empty(0, dtype=ttRType)
     # ZMQ Publishers
-    self.tf_emitter = ZmqEmitter(tf_port, tf_topic)
+#    self.tf_emitter = ZmqEmitter(tf_port, tf_topic)
     self.pc_emitter = ZmqEmitter(pc_port, pc_topic)
     # Count how many poses and point clouds have been received
     self.ctr = 0
@@ -56,13 +56,13 @@ class CloudAndPoseBuffer_ZMQPublisher(object):
     try:
       (trans, rot) = self.tf_listener.lookupTransformFull("/map", ts,\
                      "/camera_rgb_optical_frame", ts, "/map")
-      R = tf.transformations.quaternion_matrix(rot)
-      R = R[0:3, 0:3]
-      # Add pose to buffer
-      ts = ts.secs + ts.nsecs*1e-9
-      new_pose = np.array([(ts,) + trans + tuple(R.flatten())],\
-                          dtype=ttRType)
-      self.poses = np.concatenate((self.poses, new_pose))
+#      R = tf.transformations.quaternion_matrix(rot)
+#      R = R[0:3, 0:3]
+#      # Add pose to buffer
+#      ts = ts.secs + ts.nsecs*1e-9
+#      new_pose = np.array([(ts,) + trans + tuple(R.flatten())],\
+#                          dtype=ttRType)
+#      self.poses = np.concatenate((self.poses, new_pose))
       # Convert pose to RT matrix for application to point cloud
       RT = convertToRT(trans, rot)
       # Get point cloud
@@ -85,11 +85,11 @@ class CloudAndPoseBuffer_ZMQPublisher(object):
     
     # If publication criterion met, send data out viz zmq
     if self.ctr % self.num_to_send == 0:
-      print 'Sending poses...'
-      tic = time.time()
-      self.tf_emitter.send_zipped_pickle(self.poses)
-      toc = time.time()
-      print 'Poses Sent! %.5f sec to send poses.' %(toc-tic)
+#      print 'Sending poses...'
+#      tic = time.time()
+#      self.tf_emitter.send_zipped_pickle(self.poses)
+#      toc = time.time()
+#      print 'Poses Sent! %.5f sec to send poses.' %(toc-tic)
       print 'Sending point cloud...'
       tic = time.time()
       self.pc_emitter.send_zipped_pickle(self.point_cloud)
