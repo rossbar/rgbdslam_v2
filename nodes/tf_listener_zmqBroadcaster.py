@@ -27,7 +27,7 @@ if __name__ == '__main__':
     ctr = 0
     rate = rospy.Rate(10.0)
     # Open RT_time.txt for writing
-    fpath = '/home/grim5/Desktop/RT_%s.txt' %( rospy.get_time() )
+    fpath = os.path.expanduser('~')+'/Desktop/RT_%s.txt' %( rospy.get_time() )
     fout = open( fpath, 'w' )
 
     outstr = '#timestamp	tx	ty	tz	R00	R01	R02	R10	R11	R12	R20	R21	R22\n'
