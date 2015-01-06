@@ -18,6 +18,8 @@ ttRType = np.dtype( {"names":['timestamp', 'tx', 'ty', 'tz', 'ROO', 'R01',\
                                 np.float32,np.float32,np.float32,np.float32,\
                                 np.float32]} )
 
+eps = 0.00000000001
+
 if __name__ == '__main__':
     # Init rospy node
     rospy.init_node('tf_listener')
@@ -30,7 +32,7 @@ if __name__ == '__main__':
     fpath = os.path.expanduser('~')+'/Desktop/RT_%s.txt' %( rospy.get_time() )
     fout = open( fpath, 'w' )
 
-    outstr = '#timestamp	tx	ty	tz	R00	R01	R02	R10	R11	R12	R20	R21	R22\n'
+    outstr = '#timestamp\ttx\tty\ttz\tR00\tR01\tR02\tR10\tR11\tR12\tR20\tR21\tR22\n'
     while not rospy.is_shutdown():
         try:
             ts = rospy.get_time()
@@ -49,15 +51,20 @@ if __name__ == '__main__':
 	if len(RTdata) < 1:
 	    RTdata = np.concatenate((RTdata, newPose))
 	    continue
-	if not np.array_equal(newPose, RTdata[-1]):
-            RTdata = np.concatenate( (RTdata, newPose) )
+        last_RT = RTdata[-1]
+	if newPose['tx'] != last_RT['tx'] or newPose['ty'] != last_RT['ty'] or\
+	   newPose['tz'] != last_RT['tz']:
+            RTdata = np.concatenate((RTdata, newPose))
             # Emit the data, but only once a second
             if ctr % 10 == 0:
               emitter.send_zipped_pickle(RTdata)
             ctr += 1
         
-        # Write to .ros/log std-log
-        outstr += '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' %(ts,trans[0],trans[1],trans[2],rot[0][0],rot[0][1],rot[0][2],rot[1][0],rot[1][1],rot[1][2],rot[2][0],rot[2][1],rot[2][2])
+            # Write to .ros/log std-log
+            outstr += '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n'\
+		      %(ts,trans[0],trans[1],trans[2],rot[0][0],rot[0][1],\
+		      rot[0][2],rot[1][0],rot[1][1],rot[1][2],rot[2][0],\
+		      rot[2][1],rot[2][2])
 
         rate.sleep()
     print 'Writing to file...'
