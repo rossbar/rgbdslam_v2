@@ -23,4 +23,6 @@
   <node name="tf_broadcaster" pkg="rgbdslam" type="tf_listener_zmqBroadcaster.py" output="screen" />
   <!-- Node for aggregating, applying tf, and sending pc's to imaging -->
   <node name="pc_broadcaster" pkg="rgbdslam" type="batchCloudListener_zmqBroadcaster.py" output="screen" />
+  <!-- Launch detector publisher node -->
+  <node name="detector_broadcaster" pkg="rgbdslam" type="detector_data_publisher.py" output="screen" />
 </launch>
