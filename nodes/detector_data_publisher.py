@@ -17,7 +17,8 @@ sys.path.append(PF_DIR)
 from src.SIS import sis
 from src.cythoned.getPtrs_cy import getEventPtrs
 from src.analysisHelperFunctions import interactionType
-from src.CAnalysis.canalysis import analyzeReadoutData
+#from src.CAnalysis.canalysis import analyzeReadoutData
+from src.analysis_v2 import analyzeReadoutData
 
 savedInteractionType = np.dtype({"names":['time','energy1', 'x1', 'y1', 'z1', 'dT1',\
                                          'dE1', 'det1', 'energy2', 'x2', 'y2', 'z2',\
@@ -33,7 +34,7 @@ from ZmqClass import ZmqEmitter
 class SISAcquisitionAndAnalysisNode(object):
   '''The SISAcquisitionAndAnalysisNode will insantiate a node that is 
      responsible for acquiring data from a SIS system, '''
-  def __init__(self, verbose=True, read_rate=1):
+  def __init__(self, verbose=True, read_rate=2):
     # Node attributes
     self.ctr = 0
     self.msg = None
@@ -61,20 +62,16 @@ class SISAcquisitionAndAnalysisNode(object):
 	self.start_hardware()
 	self.hardware_started = True
 	continue
+      # Wait for next dump
+      self.rate.sleep()
       # Do task
       self.task()
       # Log stuff
 #      rospy.loginfo(self.msg)
-      # Publish
-      if len(self.data_out) > 0:
-        self.publisher.send_zipped_pickle(self.data_out)
-      # Wait for next dump
-      self.rate.sleep()
 
   def task(self):
     if self.hardware_started:
       ts = self.acquire_data()
-#      print ts
       self.preprocess_data()
       l22 = self.reconstruct_compton_events()
       # Format data for sending via ros
@@ -117,15 +114,15 @@ class SISAcquisitionAndAnalysisNode(object):
     self.edata = self.edata[self.edata['detector'] % 38 != 0]
     # Sort
     self.edata.sort(order='timestamp')
-#    print self.edata
 
   def reconstruct_compton_events(self):
     # Take the preprocessed data and reconstruct all the 2-interaction events
     if self.edata is None: return
     # Get time-correlated readouts - NOTE: Only looking for 2-int events!
     ptrs, lens = getEventPtrs(self.edata['timestamp'], 40, 4, 4)
-    l11, l22, l33, lerr = analyzeReadoutData(self.edata, ptrs, lens, self.iary)
-    l22 = l22.reshape((l22.shape[0]/2, 2))
+#    l11, l22, l33, lerr = analyzeReadoutData(self.edata, ptrs, lens, self.iary)
+#    l22 = l22.reshape((l22.shape[0]/2, 2))
+    l11, l22, l33, lerr = analyzeReadoutData(self.edata, ptrs, lens)
     # Set the data to be sent out
     return l22
 
@@ -159,7 +156,7 @@ class SISAcquisitionAndAnalysisNode(object):
       newEvs[i]['det2'] = int2[6]
     # Append new interactions to the existing ones
     self.data_out = np.concatenate((self.data_out, newEvs)) 
-    # Send all interactions                                                     
+    # Send all interactions
     self.publisher.send_zipped_pickle(self.data_out)
 
   def save_interactions(self):
