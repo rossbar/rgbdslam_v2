@@ -18,8 +18,6 @@ ttRType = np.dtype( {"names":['timestamp', 'tx', 'ty', 'tz', 'ROO', 'R01',\
                                 np.float32,np.float32,np.float32,np.float32,\
                                 np.float32]} )
 
-eps = 0.00000000001
-
 if __name__ == '__main__':
     # Init rospy node
     rospy.init_node('tf_listener')
@@ -28,9 +26,9 @@ if __name__ == '__main__':
     RTdata = np.empty(0, dtype=ttRType)
     ctr = 0
     rate = rospy.Rate(10.0)
-    # Open RT_time.txt for writing
-    fpath = os.path.expanduser('~')+'/Desktop/RT_%s.txt' %( rospy.get_time() )
-    fout = open( fpath, 'w' )
+#    # Open RT_time.txt for writing
+#    fpath = os.path.expanduser('~')+'/Desktop/RT_%s.txt' %( rospy.get_time() )
+#    fout = open( fpath, 'w' )
 
     outstr = '#timestamp\ttx\tty\ttz\tR00\tR01\tR02\tR10\tR11\tR12\tR20\tR21\tR22\n'
     while not rospy.is_shutdown():
@@ -67,6 +65,6 @@ if __name__ == '__main__':
 		      rot[2][1],rot[2][2])
 
         rate.sleep()
-    print 'Writing to file...'
-    fout.write(outstr)
-    print 'Done.'
+#    print 'Writing to file...'
+#    fout.write(outstr)
+#    print 'Done.'
