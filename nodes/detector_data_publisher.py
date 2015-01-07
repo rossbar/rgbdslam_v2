@@ -169,4 +169,4 @@ if __name__ == '__main__':
   raw_input('Press Enter to begin detector acquisition: ')
   print 'Starting detector acquisition...'
   detector_publisher.run()
-  detector_publisher.save_interactions()
+#  detector_publisher.save_interactions()
