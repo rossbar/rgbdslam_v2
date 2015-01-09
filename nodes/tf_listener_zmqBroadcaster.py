@@ -18,6 +18,11 @@ ttRType = np.dtype( {"names":['timestamp', 'tx', 'ty', 'tz', 'ROO', 'R01',\
                                 np.float32,np.float32,np.float32,np.float32,\
                                 np.float32]} )
 
+# Threshold for maximum distance between two adjacent pose estimates. If the
+# computed distance between the poses is greater than this threshold, reject
+# it
+MAX_DIST = .20
+
 if __name__ == '__main__':
     # Init rospy node
     rospy.init_node('tf_listener')
@@ -45,11 +50,19 @@ if __name__ == '__main__':
         # Format data properly for broadcasting
         newPose = np.array( [(ts,)+trans+tuple(R.flatten())],\
                             dtype=ttRType )
-	# Make sure pose is new
+	# Handle the first pose estimate
 	if len(RTdata) < 1:
 	    RTdata = np.concatenate((RTdata, newPose))
 	    continue
         last_RT = RTdata[-1]
+	# Check against distance threshold in attempt to enforce a smooth
+	# detector track
+	inter_pose_dist = np.sqrt( (newPose['tx'] - last_RT['tx'])**2 +\
+			           (newPose['ty'] - last_RT['ty'])**2 +\
+				   (newPose['tz'] - last_RT['tz'])**2 )
+	print inter_pose_dist
+	if inter_pose_dist > MAX_DIST: continue
+	# HACK - Check for stopping condition
 	if newPose['tx'] != last_RT['tx'] or newPose['ty'] != last_RT['ty'] or\
 	   newPose['tz'] != last_RT['tz']:
             RTdata = np.concatenate((RTdata, newPose))
