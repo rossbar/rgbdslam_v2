@@ -18,6 +18,12 @@
     <param name="config/cloud_creation_skip_step"      value="4"/><!-- subsample the images' pixels (in both, width and height), when creating the cloud -->
     <param name="config/data_skip_step"                value="1"/><!-- subsample the image frames (in time) -->
 
+    <!-- From RGBDSLAM_v1 (fuerte) -->
+    <!-- <param name="config/min_matches"                   value="10"/> -->
+
+    <!-- Ross params -->
+    <!-- <param name="config/max_translation_meter"         value="0.05"/> -->
+
   </node>
   <!-- Broadcast un-optimized poses for syncing with rad data -->
   <node name="tf_broadcaster" pkg="rgbdslam" type="tf_listener_zmqBroadcaster.py" output="screen" />
