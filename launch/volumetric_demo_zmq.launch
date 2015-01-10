@@ -12,14 +12,16 @@
 
     <param name="config/feature_detector_type"         value="SIFTGPU"/><!-- also available: SIFT, SURF, GFTT (good features to track), ORB. -->
     <param name="config/feature_extractor_type"        value="SIFTGPU"/><!-- also available: SIFT, SURF, SURF128 (extended SURF), ORB. -->
-    <param name="config/nn_distance_ratio"             value="0.5"/> <!-- Feature correspondence is valid if distance to nearest neighbour is smaller than this parameter times the distance to the 2nd neighbour -->
+    <param name="config/nn_distance_ratio"             value="0.55"/> <!-- Feature correspondence is valid if distance to nearest neighbour is smaller than this parameter times the distance to the 2nd neighbour -->
     <param name="config/max_keypoints"                 value="600"/><!-- Extract no more than this many keypoints (not honored by SIFTGPU)-->
     <param name="config/ransac_iterations"             value="200"/>
+    <param name="config/min_matches"                   value="60"/>
+    <param name="ransac_termination_inlier_pct"        value="75"/>
     <param name="config/cloud_creation_skip_step"      value="4"/><!-- subsample the images' pixels (in both, width and height), when creating the cloud -->
     <param name="config/data_skip_step"                value="1"/><!-- subsample the image frames (in time) -->
+    <param name="config/send_clouds_rate"              value="10"/>
 
     <!-- From RGBDSLAM_v1 (fuerte) -->
-    <!-- <param name="config/min_matches"                   value="10"/> -->
 
     <!-- Ross params -->
     <!-- <param name="config/max_translation_meter"         value="0.05"/> -->
