@@ -60,7 +60,6 @@ if __name__ == '__main__':
 	inter_pose_dist = np.sqrt( (newPose['tx'] - last_RT['tx'])**2 +\
 			           (newPose['ty'] - last_RT['ty'])**2 +\
 				   (newPose['tz'] - last_RT['tz'])**2 )
-	print inter_pose_dist
 	if inter_pose_dist > MAX_DIST: continue
 	# HACK - Check for stopping condition
 	if newPose['tx'] != last_RT['tx'] or newPose['ty'] != last_RT['ty'] or\
