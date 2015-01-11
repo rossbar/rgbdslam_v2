@@ -11,6 +11,8 @@ from python_msg_conversions import pointclouds
 import sys
 from ZmqClass import ZmqEmitter
 
+DS = 1		# Downsample factor for pt cloud
+
 class PointCloudListener():
   '''Creates an object that listens on the rgbdslam/batchclouds topic for 
      point clouds.'''
@@ -39,7 +41,7 @@ class PointCloudListener():
     # Send the pcld out
     print 'Sending ptcloud out on network...'
     tic = rospy.get_time()
-    self.emitter.send_zipped_pickle( self.cloud_arr[::10])
+    self.emitter.send_zipped_pickle( self.cloud_arr[::1])
     toc = rospy.get_time()
     print 'Ptcld sent. Elapsed time = %s' %(toc-tic)
 
