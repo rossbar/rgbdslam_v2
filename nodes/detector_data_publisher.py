@@ -84,7 +84,6 @@ class SISAcquisitionAndAnalysisNode(object):
     # Acquire data from sis
     tic = time.time()
     ts, en, ch, trig = sis.acquiredata(self.cal_file, self.save_data)
-#    acq_ts = time.time()	# Acquisition time stamp
     acq_ts = rospy.get_time()
     # Convert to numpy array
     edata = np.zeros(ts.shape, dtype=edataType)
