@@ -41,7 +41,8 @@ class PointCloudListener():
     # Send the pcld out
     print 'Sending ptcloud out on network...'
     tic = rospy.get_time()
-    self.emitter.send_zipped_pickle( self.cloud_arr[::1])
+#    self.emitter.send_zipped_pickle( self.cloud_arr[::1])
+    self.emitter.send_zipped_pickle(self.cloud_arr)
     toc = rospy.get_time()
     print 'Ptcld sent. Elapsed time = %s' %(toc-tic)
 

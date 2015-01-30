@@ -16,7 +16,9 @@ sys.path.append(PF_DIR)
 # Framework imports
 from src.SIS import sis
 from src.cythoned.getPtrs_cy import getEventPtrs
-from src.analysisHelperFunctions import interactionType
+from src.analysisHelperFunctions import interactionType, et50_type,\
+		                        convert_to_t50_type, correct_depth,\
+					refine_z
 #from src.CAnalysis.canalysis import analyzeReadoutData
 from src.analysis_v2 import analyzeReadoutData
 
@@ -74,16 +76,17 @@ class SISAcquisitionAndAnalysisNode(object):
       ts = self.acquire_data()
       self.preprocess_data()
       l22 = self.reconstruct_compton_events()
+      print l22.shape
+      num_orig = l22.shape[0]
       # Format data for sending via ros
-      if len(l22) > 0:
-        self.send_interactions(l22, ts)
+      if len(l22) > 0: self.send_interactions(l22, ts)
     else:
       msg = '[SIS_NODE]: Hardware not started, awaiting signal...'
 
   def acquire_data(self):
     # Acquire data from sis
     tic = time.time()
-    ts, en, ch, trig = sis.acquiredata(self.cal_file, self.save_data)
+    ts, en, ch, trig, rdata = sis.acquireDataWithRaw(self.cal_file, self.save_data)
     acq_ts = rospy.get_time()
     # Convert to numpy array
     edata = np.zeros(ts.shape, dtype=edataType)
@@ -94,6 +97,7 @@ class SISAcquisitionAndAnalysisNode(object):
     edata.trigger = trig
     # Set up data for further processing
     self.edata = edata
+    self.rdata = rdata
     self.ctr += 1
     toc = time.time()
     # Add logging/printing here
@@ -113,15 +117,19 @@ class SISAcquisitionAndAnalysisNode(object):
     self.edata = self.edata[self.edata['detector'] % 38 != 0]
     # Sort
     self.edata.sort(order='timestamp')
+    # Extract t50
+    self.edata = convert_to_t50_type(self.edata, self.rdata)
 
   def reconstruct_compton_events(self):
     # Take the preprocessed data and reconstruct all the 2-interaction events
     if self.edata is None: return
     # Get time-correlated readouts - NOTE: Only looking for 2-int events!
     ptrs, lens = getEventPtrs(self.edata['timestamp'], 40, 4, 4)
-#    l11, l22, l33, lerr = analyzeReadoutData(self.edata, ptrs, lens, self.iary)
-#    l22 = l22.reshape((l22.shape[0]/2, 2))
-    l11, l22, l33, lerr = analyzeReadoutData(self.edata, ptrs, lens)
+    l11, l22, l33, lerr = analyzeReadoutData(self.edata, ptrs, lens, self.iary)
+    # Remove bad dt50 values
+    l22['dt50'][np.invert(np.isfinite(l22['dt50']))] = 0.0                      
+    # Refine z
+    l22['z'] = refine_z(l22)                                                    
     # Set the data to be sent out
     return l22
 
