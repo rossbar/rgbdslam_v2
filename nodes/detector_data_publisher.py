@@ -44,7 +44,7 @@ class SISAcquisitionAndAnalysisNode(object):
     self.iary = np.zeros(1, dtype=interactionType) # For CAnalysis
     # SIS flags - NOTE: HARD-CODED FOR NOW, SHOULD MAKE CONFIGURABLE
     self.save_data = 0	# Default: Don't save binary data
-    self.cal_file = PF_DIR + 'src/SIS/CCI2_Calibration_4-9-13.txt'
+    self.cal_file = PF_DIR + 'src/SIS/CCI2_Calibration_3-9-15.txt'
     self.conf_file = PF_DIR +\
     'src/SIS/DATA_nnOn_trig=50=21.5keV_optimizedFilter_PostPreampRepair.ini'
     self.binary_file = os.path.expanduser("~") + '/Desktop/ROS_DET_NODE_OUT.dat'
@@ -118,7 +118,7 @@ class SISAcquisitionAndAnalysisNode(object):
     # Take the preprocessed data and reconstruct all the 2-interaction events
     if self.edata is None: return
     # Get time-correlated readouts - NOTE: Only looking for 2-int events!
-    ptrs, lens = getEventPtrs(self.edata['timestamp'], 40, 4, 4)
+    ptrs, lens = getEventPtrs(self.edata['timestamp'], 28, 4, 4)
 #    l11, l22, l33, lerr = analyzeReadoutData(self.edata, ptrs, lens, self.iary)
 #    l22 = l22.reshape((l22.shape[0]/2, 2))
     l11, l22, l33, lerr = analyzeReadoutData(self.edata, ptrs, lens)
