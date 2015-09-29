@@ -55,12 +55,12 @@ if __name__ == '__main__':
 	    RTdata = np.concatenate((RTdata, newPose))
 	    continue
         last_RT = RTdata[-1]
-	# Check against distance threshold in attempt to enforce a smooth
-	# detector track
-	inter_pose_dist = np.sqrt( (newPose['tx'] - last_RT['tx'])**2 +\
-			           (newPose['ty'] - last_RT['ty'])**2 +\
-				   (newPose['tz'] - last_RT['tz'])**2 )
-	if inter_pose_dist > MAX_DIST: continue
+#	# Check against distance threshold in attempt to enforce a smooth
+#	# detector track
+#	inter_pose_dist = np.sqrt( (newPose['tx'] - last_RT['tx'])**2 +\
+#			           (newPose['ty'] - last_RT['ty'])**2 +\
+#				   (newPose['tz'] - last_RT['tz'])**2 )
+#	if inter_pose_dist > MAX_DIST: continue
 	# HACK - Check for stopping condition
 	if newPose['tx'] != last_RT['tx'] or newPose['ty'] != last_RT['ty'] or\
 	   newPose['tz'] != last_RT['tz']:
@@ -68,6 +68,7 @@ if __name__ == '__main__':
             # Emit the data, but only once a second
             if ctr % 10 == 0:
               emitter.send_zipped_pickle(RTdata)
+	      print '\n\n\nSENT POSE DATA\n\n\n'
             ctr += 1
         
             # Write to .ros/log std-log
