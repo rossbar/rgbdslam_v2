@@ -23,6 +23,7 @@
 #include <Eigen/Core>
 #include "parameter_server.h"
 #include "ros_service_ui.h"
+#include <X11/Xlib.h>
 
 //TODO:
 //better potential-edge-selection through flann or place recognition
@@ -109,6 +110,8 @@ void gui_connections(Graphical_UI* gui, GraphManager* graph_mgr, OpenNIListener*
  */
 int main(int argc, char** argv)
 {
+  // Attempt to fix xcb error
+  XInitThreads();
   setlocale(LC_NUMERIC,"C");//Avoid expecting german decimal separators in launch files
 
   //create thread object, to run the ros event processing loop in parallel to the qt loop
