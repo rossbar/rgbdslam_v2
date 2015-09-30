@@ -29,4 +29,10 @@
     <param name="config/optimizer_skip_step"           value="1"/><!-- optimize only every n-th frame -->
 
   </node>
+
+  <!-- Volumetric Nodes -->
+  <!-- Broadcast un-optimized poses for syncing with rad data -->
+  <node name="tf_broadcaster" pkg="rgbdslam" type="tf_listener_zmqBroadcaster.py" output="screen" />
+  <!-- Node for broadcasting aggregate cloud -->
+  <node name="pc_broadcaster" pkg="rgbdslam" type="aggregateCloudListener_zmqBroadcaster.py" output="screen" />
 </launch>
