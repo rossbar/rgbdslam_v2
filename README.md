@@ -21,30 +21,28 @@ Additional information can be found here:<br/>
 <img src="http://raw.githubusercontent.com/felixendres/rgbdslam_v2/hydro/media/rgbdslamv2_fr2desk.jpg" alt="RGBDSLAM on the RGB-D Benchmark Dataset" width="600">
 
 # Prerequisites  ################################################################
-- Ubuntu 12.04 - 13.04
-- [ROS hydro](http://wiki.ros.org/hydro/)
-- Problems may occur when using a version of the PCL library different from the ROS hydro version.
+- Ubuntu 14.04 
+- [ROS indigo](http://wiki.ros.org/indigo/)
 
 # Installation ################################################################
-The installation of RGBDSLAMv2 for ROS hydro should be straightforward.
-A copy-pastable walkthrough can be found below
 
 1. Put RGBDSLAMv2 in a catkin workspace: See [the catkin tutorial](http://wiki.ros.org/catkin/Tutorials/create_a_workspace) 
-  for details. Use git to clone this repository into your workspace's "src/" directory. Or download RGBDSLAMv2 as an [archive](http://codeload.github.com/felixendres/rgbdslam_v2/zip/hydro) and extract it to "src/".
+  for details. Use git to clone this repository into your workspace's "src/" directory. Or download RGBDSLAMv2 as an [archive](http://codeload.github.com/felixendres/rgbdslam_v2/zip/indigo) and extract it to "src/".
 
 2. Use rosdep (i.e. "rosdep install rgbdslam") to install missing 
   dependencies. For details see http://wiki.ros.org/ROS/Tutorials/rosdep
 
-3. To build RGBDSLAMv2 go to your catkine workspace and execute "catkin_make". 
+4. To build RGBDSLAMv2 go to your catkin workspace and execute "catkin_make". 
    If you get an error about the missing siftgpu library, execute "catkin_make" again.
 
 
 ##Installation from Scratch #####################################################
-Assuming you have installed ROS hydro on Ubuntu, issue the following commands in 
-a terminal (or copy-paste the whole sequence at once)
+This walkthrough is is hardly tested, so watch out for problems.
+Assuming you have installed ROS indigo on Ubuntu 14.04, issue the following commands in 
+a terminal (copy-paste should work)
 
 	#Prepare Workspace
-	source /opt/ros/hydro/setup.bash
+	source /opt/ros/indigo/setup.bash
 	mkdir -p ~/rgbdslam_catkin_ws/src
 	cd ~/rgbdslam_catkin_ws/src
 	catkin_init_workspace
@@ -54,22 +52,21 @@ a terminal (or copy-paste the whole sequence at once)
 	
 	#Get RGBDSLAM
 	cd ~/rgbdslam_catkin_ws/src
-	wget -q http://github.com/felixendres/rgbdslam_v2/archive/hydro.zip
-	unzip -q hydro.zip
+	wget -q http://github.com/felixendres/rgbdslam_v2/archive/indigo.zip
+	unzip -q indigo.zip
 	cd ~/rgbdslam_catkin_ws/
 	
 	#Install
 	rosdep update
 	rosdep install rgbdslam
 	catkin_make 
-	catkin_make
 
 # Installation done! What's next?
 See the sections below for more details on the usage. 
 But to get you started quickly here's the most important pointers:
 
 -   If you want to use RGBDSLAMv2 with an RGB-D camera you may have
-    to install openni (sudo apt-get install ros-hydro-openni-launch).
+    to install openni (sudo apt-get install ros-indigo-openni-launch).
 
 -   Check out the launch files in "launch/" for examples and specific 
     use cases. roslaunch rgbdslam openni+rgbdslam.launch is a good starting 
@@ -78,6 +75,13 @@ But to get you started quickly here's the most important pointers:
 -   Check out the README in "test/" for running, testing and evaluating
     RGBDSLAMv2 on Juergen Sturm's RGB-D SLAM Dataset and Benchmark:
     http://vision.in.tum.de/data/datasets/rgbd-dataset
+
+-   If you want to use SURF or SIFT, you will need to build OpenCV from source,
+    including the non-free module (this does not include SIFTGPU, which works
+    out of the box). In the CMakeLists.txt of RGBDSLAMv2 you can set the build
+    directory of OpenCV and enable the non-free functionality.  Note that SIFT
+    and SURF are not the best choice. Due to new (software) features in
+    RGBDSLAMv2, ORB outperforms both.
 
 <img src="http://raw.githubusercontent.com/felixendres/rgbdslam_v2/hydro/media/rgbdslamv2_empty.jpg" alt="RGBDSLAM right after startup" width="600">
 
@@ -201,6 +205,8 @@ $ rosservice call /rgbdslam/ros_ui save_individual
 
 
 # Further Help ##################################################################
+The compilation may take a lot of memory, particularly if the environment variable
+$ROS_PARALLEL_JOBS is set.
 
 If you are located in Germany and get errors loading the saved ply files
 into meshlab, try switching to U.S. locale or replace the decimal point with a
@@ -231,6 +237,9 @@ on Ubuntu 10.04 x64) To use SiftGPU you should install "libdevil-dev".
   
   Additional compiling information can be changed in
   external/siftgpu/linux/makefile.
+  
+  If you get an error that the siftgpu library is not found, execute "make" manually
+  in the directory external/siftgpu/ and rerun catkin_make.
 
   GICP Generalized ICP can be (de)activated for refining the registration. For
   more information see http://stanford.edu/~avsegal/generalized_icp.html

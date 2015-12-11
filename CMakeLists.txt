@@ -19,8 +19,12 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 #SET(CMAKE_CXX_FLAGS "-O3 -fPIC -std=c++0x")
 #For annotated profiling with perf: 
 #SET(CMAKE_CXX_FLAGS "-ggdb -O3 -fPIC -std=c++0x")
-SET(CMAKE_CXX_FLAGS "-ggdb -O3 -fPIC -std=c++0x -march=native -mno-avx")
-
+#<<<<<<< HEAD
+#SET(CMAKE_CXX_FLAGS "-ggdb -O3 -fPIC -std=c++0x -march=native -mno-avx")
+#
+#=======
+SET(CMAKE_CXX_FLAGS "-ggdb -O3 -fPIC")
+#>>>>>>> 3950ce4d530bc9a30ed9d4e11e4b7965923e77cb
 IF (${USE_GL2PS})
   add_definitions(-DGL2PS)
 ENDIF (${USE_GL2PS})
@@ -29,6 +33,7 @@ set(USE_GICP 0)
 IF (${USE_GICP_BIN} OR ${USE_GICP_CODE})
 	set(USE_GICP 1)
 ENDIF (${USE_GICP_BIN} OR ${USE_GICP_CODE})
+
 #########################################################
 #########################################################
 
@@ -41,7 +46,7 @@ ENDIF (${USE_GICP_BIN} OR ${USE_GICP_CODE})
 ####################################################
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake-modules/")
 #message(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH})
-find_package(catkin REQUIRED COMPONENTS pcl_conversions pcl_ros roscpp image_transport cv_bridge sensor_msgs 
+find_package(catkin REQUIRED COMPONENTS pcl_conversions pcl_ros roscpp image_transport cv_bridge sensor_msgs cmake_modules
              geometry_msgs visualization_msgs std_msgs tf message_generation message_filters rosbag rosconsole)
 
 project(rgbdslam)
@@ -80,7 +85,7 @@ find_package(G2O REQUIRED)
 include_directories(${G2O_INCLUDE_DIRS})
 link_directories(${G2O_LIBRARY_DIRS})
 link_libraries(${G2O_LIBRARIES})
-message("G2o-libraries "${G2O_LIBRARIES})
+message("G2o-libraries " ${G2O_LIBRARIES})
 
 # Qt ########################
 # http://qtnode.net/wiki/Qt4_with_cmake
@@ -170,6 +175,18 @@ ENDIF (${USE_PCL_ICP})
 #############################
 # OpenCV ####################
 #############################
+#For using SIFT and SURF provide your own opencv installation
+#via exporting a shell variable
+set(OpenCV_DIR $ENV{OpenCV_DIR})
+#or set it directly here, e.g.
+#set(OpenCV_DIR /home/endres/ros_indigo/opencv2/build/)
+#Then activate the following definition
+#add_definitions(-DCV_NONFREE)
+
+IF (NOT "${OpenCV_DIR}" EQUAL "")
+    MESSAGE("Using OpenCV from " ${OpenCV_DIR})
+ENDIF (NOT "${OpenCV_DIR}" EQUAL "")
+
 find_package(OpenCV)
 include_directories(${OpenCV_INCLUDE_DIRS})
 link_directories(${OpenCV_LIBRARY_DIRS})
@@ -191,7 +208,8 @@ file(GLOB_RECURSE QT_MOC RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} FOLLOW_SYMLINKS in
 
 QT4_ADD_RESOURCES(QT_RESOURCES_CPP ${QT_RESOURCES})
 QT4_WRAP_UI(QT_FORMS_HPP ${QT_FORMS})
-QT4_WRAP_CPP(QT_MOC_HPP ${QT_MOC})  
+QT4_WRAP_CPP(QT_MOC_HPP ${QT_MOC} OPTIONS -DBOOST_TT_HAS_OPERATOR_HPP_INCLUDED -DBOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION)
+#QT4_WRAP_CPP(QT_MOC_HPP ${QT_MOC}) 
 
 ##############################################################################
 # Sources to Compile
@@ -226,7 +244,7 @@ add_dependencies(rgbdslam rgbdslam_gencpp)
 #SET(G2O_LIBS ${G2O_LIBRARIES} cholmod cxsparse)
 #SET(LIBS_LINK GL GLU -lgl2ps ${G2O_LIBS} ${QT_LIBRARIES} ${QT_QTOPENGL_LIBRARY} ${GLUT_LIBRARY} ${OPENGL_LIBRARY} ${OpenCV_LIBS})
 #Use specific version of cxsparse, to avoid linker warning about possible conflicts between versions 2.2.3 (linked from g2o) and 3.1.0
-SET(LIBS_LINK GL GLU cholmod /usr/lib/libcxsparse.so.2.2.3 ${G2O_LIBRARIES} ${QT_LIBRARIES} ${QT_QTOPENGL_LIBRARY} ${GLUT_LIBRARY} ${OPENGL_LIBRARY} ${OpenCV_LIBS})
+SET(LIBS_LINK GL GLU cholmod cxsparse ${G2O_LIBRARIES} ${QT_LIBRARIES} ${QT_QTOPENGL_LIBRARY} ${GLUT_LIBRARY} ${OPENGL_LIBRARY} ${OpenCV_LIBS})
 #-lboost_signals -lrt -loctomap -loctomap_server -loctomath)
 
 IF (${USE_SIFT_GPU})
